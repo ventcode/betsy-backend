@@ -2,7 +2,6 @@ package challenge
 
 import (
 	"fmt"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/ventcode/betsy-backend/user"
@@ -32,10 +31,33 @@ type Challenge struct {
 }
 
 func Show(c *gin.Context) {
-	userid := c.Param("userid")
-	message := "userid is " + userid
-	c.String(http.StatusOK, message)
-	fmt.Println(message)
+	db, exists := c.Get("db")
+	if !exists {
+		c.JSON(500, gin.H{"error": "Failed to get database instance"})
+		return
+	}
+
+	gormDB, ok := db.(*gorm.DB)
+	if !ok {
+		c.JSON(500, gin.H{"error": "Invalid database instance type"})
+		return
+	}
+
+	var cha Challenge
+
+	if !ok {
+		c.JSON(500, gin.H{"error": "Invalid database instance type"})
+		return
+	}
+
+	id, _ := c.Params.Get("id")
+	gormDB.Find(&cha, id)
+
+	if (cha == Challenge{}) {
+		c.JSON(404, gin.H{"error": "Not found"})
+	} else {
+		c.JSON(200, gin.H{"challenge": cha})
+	}
 }
 
 func Index(c *gin.Context) {
