@@ -1,0 +1,23 @@
+version: "3.8"
+services:
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    command: "app"
+    depends_on:
+      - database
+
+  database:
+    environment:
+      POSTGRES_USERNAME: betsy
+      POSTGRES_PASSWORD: password
+    image: postgres
+    restart: always
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres:/var/lib/postgresql/data
+
+volumes:
+  postgres:
