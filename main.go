@@ -29,7 +29,7 @@ func main() {
 		c.Next()
 	})
 
-	// router.GET("/users", user.Index)
+	router.GET("/users", user.Index)
 	router.GET("/challenges", challenge.Index)
 	router.GET("/challenges/:id", challenge.Show)
 	// router.POST("/challenges", challenge.Create)
