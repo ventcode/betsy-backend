@@ -10,7 +10,7 @@ services:
 
   database:
     environment:
-      POSTGRES_USERNAME: betsy
+      POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
     image: postgres
     restart: always
