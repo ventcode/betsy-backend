@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/ventcode/betsy-backend/helpers"
 	"github.com/ventcode/betsy-backend/user"
 	"gorm.io/gorm"
 )
@@ -39,5 +40,8 @@ func Show(c *gin.Context) {
 }
 
 func Index(c *gin.Context) {
-	fmt.Println("Super")
+	var challenges []Challenge
+	db := helpers.GetDB(c)
+	db.Find(&challenges)
+	c.JSON(http.StatusOK, gin.H{"data": challenges})
 }

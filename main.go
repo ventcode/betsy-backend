@@ -7,27 +7,20 @@ import (
 	"github.com/ventcode/betsy-backend/bet"
 	"github.com/ventcode/betsy-backend/challenge"
 	"github.com/ventcode/betsy-backend/user"
-	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
 func main() {
-	dsn := "user=postgres password=password dbname=postgres host=localhost port=5432 sslmode=disable"
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
-	if err != nil {
-		log.Fatal(err)
-	}
+	// Database
+	db := DatabaseConnection()
+	err := db.AutoMigrate(&user.User{}, &challenge.Challenge{}, &bet.Bet{})
 
-	err = db.AutoMigrate(&user.User{}, &challenge.Challenge{}, &bet.Bet{})
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	router := gin.Default()
-	router.Use(func(c *gin.Context) {
-		c.Set("db", db)
-		c.Next()
-	})
+	router.Use(MiddlewareSetDB(db))
 
 	// router.GET("/users", user.Index)
 	router.GET("/challenges", challenge.Index)
