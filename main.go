@@ -23,7 +23,20 @@ func main() {
         log.Fatal(err)
     }
 
-    generateMockData(db)
+
+    router.Use(func(c *gin.Context) {
+        c.Set("db", db)
+        c.Next()
+    })
+
+    router.GET("/users", user.Index)
+    router.GET("/challenges", challenge.Index)
+    router.GET("/challenges/:id", challenge.Show)
+    router.POST("/challenges", challenge.Create)
+    router.PATCH("/challenges/:id", challenge.Update)
+    router.POST("/challenges/:id/bets", bet.Create)
+
+   // generateMockData(db)
 
     router := gin.Default()
 

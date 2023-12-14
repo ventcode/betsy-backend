@@ -26,3 +26,10 @@ type Challenge struct {
     Status Status `gorm:"not null;default:0"`
     ChallengerWon *bool
 }
+
+func Show(c *gin.Context) {
+    userid := c.Param("userid") 
+    message := "userid is " + userid
+    c.String(http.StatusOK, message)
+    fmt.Println(message)
+}
