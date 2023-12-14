@@ -1,4 +1,4 @@
-package main
+package betsybackend
 
 import (
 	"fmt"
