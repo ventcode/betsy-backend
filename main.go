@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/gin-gonic/gin"
@@ -23,7 +24,27 @@ func main() {
         log.Fatal(err)
     }
 
+    generateMockData(db)
+
     router := gin.Default()
 
     router.Run()
+}
+
+func generateMockData(db *gorm.DB) {
+    handleError := func(tx *gorm.DB) {
+        err := tx.Error
+        if err != nil {
+            log.Fatal(err)
+        }
+    }
+
+    u := &user.User{ExternalId: "greatGoogleId", MoneyAmount: 1000}
+    handleError(db.Create(u))
+    
+    uu := &user.User{ExternalId: "greatGoogleId", MoneyAmount: 2000}
+    handleError(db.Create(uu))
+
+    ch := &challenge.Challenge{Challenger: *u, Challenged: *uu, Title: "Great challenge"}
+    handleError(db.Create(ch))
 }
