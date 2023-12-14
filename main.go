@@ -23,6 +23,18 @@ func main() {
         log.Fatal(err)
     }
 
+    router.Use(func(c *gin.Context) {
+        c.Set("db", db)
+        c.Next()
+    })
+
+    router.GET("/users", user.Index)
+    router.GET("/challenges", challenge.Index)
+    router.GET("/challenges/:id", challenge.Show)
+    router.POST("/challenges", challenge.Create)
+    router.PATCH("/challenges", challenge.Update)
+    router.POST("/challenges/:id/bets", bet.Create)
+
     router := gin.Default()
 
     router.Run()
