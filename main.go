@@ -37,7 +37,7 @@ func main() {
 	router.GET("/users", useDB(user.Index))
 	router.GET("/challenges", useDB(challenge.Index))
 	router.GET("/challenges/:id", useDB(challenge.Show))
-	// router.POST("/challenges", challenge.Create)
+	router.POST("/challenges", useDB(challenge.Create))
 	router.PATCH("/challenges/:id", useDB(challenge.Update))
 	// router.POST("/challenges/:id/bets", bet.Create)
 	router.Run()

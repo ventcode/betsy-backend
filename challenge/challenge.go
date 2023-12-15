@@ -2,7 +2,6 @@ package challenge
 
 import (
 	"fmt"
-	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -34,10 +33,17 @@ type Challenge struct {
 }
 
 func Show(c *gin.Context, db *gorm.DB) {
-	userid := c.Param("userid")
-	message := "userid is " + userid
-	c.String(http.StatusOK, message)
-	fmt.Println(message)
+	var cha Challenge
+
+	id, _ := c.Params.Get("id")
+	rows_affected := db.Find(&cha, id).RowsAffected
+
+	if rows_affected == 0 {
+		c.JSON(422, "Challenge not found")
+		return
+	} else {
+		c.JSON(200, gin.H{"challenge": cha})
+	}
 }
 
 func Update(c *gin.Context, db *gorm.DB) {
@@ -62,4 +68,24 @@ func Index(c *gin.Context, db *gorm.DB) {
 	db.Preload("Challenger").Preload("Challenged").Find(&challenges)
 
 	c.JSON(http.StatusOK, gin.H{"data": challenges})
+}
+
+type CreateChallengeInput struct {
+	Title        string `json:"title" binding:"required"`
+	Amount       *uint  `json:"amount" binding:"required,gt=0"`
+	ChallengerID *int   `json:"challenger_id" binding:"required"`
+	ChallengedID *int   `json:"challenged_id" binding:"required"`
+}
+
+func Create(c *gin.Context, db *gorm.DB) {
+	var input CreateChallengeInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	challenge := Challenge{Title: input.Title, Amount: *input.Amount, ChallengerID: *input.ChallengerID, ChallengedID: *input.ChallengedID}
+	db.Create(&challenge)
+
+	c.JSON(http.StatusOK, challenge)
 }
