@@ -49,10 +49,10 @@ func generateMockData(db *gorm.DB) {
 		}
 	}
 
-	u := &user.User{ExternalId: "greatGoogleId2", MoneyAmount: 1000}
+	u := &user.User{ExternalId: "greatGoogleId", MoneyAmount: 1000}
 	handleError(db.Create(u))
 
-	uu := &user.User{ExternalId: "google3", MoneyAmount: 2000}
+	uu := &user.User{ExternalId: "google", MoneyAmount: 2000}
 	handleError(db.Create(uu))
 
 	ch := &challenge.Challenge{Challenger: *u, Challenged: *uu, Title: "Great challenge"}
