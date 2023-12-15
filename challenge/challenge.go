@@ -23,20 +23,6 @@ func Show(c *gin.Context, db *gorm.DB) {
 	}
 }
 
-// type UpdateChallengeInput struct {
-// 	Status        *Status `json:"status" binding:"required,max=3"`
-// 	ChallengerWon *bool   `json:"challenger_won"`
-// 	common.Model
-// 	ChallengerID  int       `gorm:"not null"json:"-"`
-// 	Challenger    user.User `json:"challenger"`
-// 	ChallengedID  int       `gorm:"not null"json:"-"`
-// 	Challenged    user.User `json:"challenged"`
-// 	Title         string    `gorm:"not null"json:"title"`
-// 	Amount        uint      `gorm:"not null;default:0"json:"amount"`
-// 	Status        Status    `gorm:"not null;default:0"json:"status"`
-// 	ChallengerWon *bool     `json:"challenger_won"`
-// }
-
 // func Update(c *gin.Context, db *gorm.DB) {
 // 	chall := Challenge{}
 // 	ra := db.Preload("Challenger").
@@ -49,30 +35,30 @@ func Show(c *gin.Context, db *gorm.DB) {
 // 	}
 
 // 	if chall.Status == Finished {
-// 		c.JSON(422, "Challenge is Finished, can't change anything!")
+// 		c.JSON(http.StatusUnprocessableEntity, "Challenge is Finished, can't change anything!")
 // 		return
 // 	}
 
 // 	updateInput := UpdateChallengeInput{}
 // 	err := c.ShouldBindJSON(&updateInput)
 // 	if err != nil {
-// 		c.JSON(422, err.Error())
+// 		c.JSON(http.StatusUnprocessableEntity, err.Error())
 // 		return
 // 	}
 
 // 	if *updateInput.Status != Finished {
 // 		if updateInput.ChallengerWon != nil {
-// 			c.JSON(422, "You can't determine who won if it is not finished!")
+// 			c.JSON(http.StatusUnprocessableEntity, "You can't determine who won if it is not finished!")
 // 			return
 // 		}
 // 	} else if updateInput.ChallengerWon == nil {
-// 		c.JSON(422, "You need to specify challenger_won!")
+// 		c.JSON(http.StatusUnprocessableEntity, "You need to specify challenger_won!")
 // 		return
 // 	}
 
 // 	err = db.Model(&chall).Updates(updateInput).Error
 // 	if err != nil {
-// 		c.JSON(422, err)
+// 		c.JSON(http.StatusUnprocessableEntity, err)
 // 		return
 // 	}
 
@@ -95,14 +81,14 @@ func Show(c *gin.Context, db *gorm.DB) {
 // 	c.JSON(200, chall)
 // 	cId, err := strconv.ParseUint(c.Param("id"), 10, 64)
 // 	if err != nil {
-// 		c.JSON(422, "Cannot parse given ID")
+// 		c.JSON(http.StatusUnprocessableEntity, "Cannot parse given ID")
 // 		return
 // 	}
 
 // 	chall := Challenge{}
 // 	ra := db.Preload("Challenger").Preload("Challenged").Find(&chall, cId).RowsAffected
 // 	if ra == 0 {
-// 		c.JSON(422, "Challenge not found")
+// 		c.JSON(http.StatusUnprocessableEntity, "Challenge not found")
 // 		return
 // 	}
 
@@ -125,13 +111,13 @@ type CreateChallengeInput struct {
 
 func NewChallenge(challInp *CreateChallengeInput, challenger, challenged *user.User) *models.Challenge {
 	return &models.Challenge{
-        Title: challInp.Title,
-        Amount: *challInp.Amount,
-        ChallengerID: *challInp.ChallengerID,
-        Challenger: *challenger,
-        ChallengedID: *challInp.ChallengedID,
-        Challenged: *challenged,
-    }
+		Title:        challInp.Title,
+		Amount:       *challInp.Amount,
+		ChallengerID: *challInp.ChallengerID,
+		Challenger:   *challenger,
+		ChallengedID: *challInp.ChallengedID,
+		Challenged:   *challenged,
+	}
 }
 
 func Create(c *gin.Context, db *gorm.DB) {
@@ -141,29 +127,29 @@ func Create(c *gin.Context, db *gorm.DB) {
 		return
 	}
 
-    if *input.ChallengedID == *input.ChallengerID {
-        c.JSON(http.StatusUnprocessableEntity, "You can't challenge yourself!")
-        return
-    }
+	if *input.ChallengedID == *input.ChallengerID {
+		c.JSON(http.StatusUnprocessableEntity, "You can't challenge yourself!")
+		return
+	}
 
-    challenger := &user.User{}
-    ra := db.Find(challenger, input.ChallengerID).RowsAffected
-    if ra == 0 {
-        c.JSON(http.StatusNotFound, "Challenger user of provided specified id does not exist")
-        return
-    }
+	challenger := &user.User{}
+	ra := db.Find(challenger, input.ChallengerID).RowsAffected
+	if ra == 0 {
+		c.JSON(http.StatusNotFound, "Challenger user of provided specified id does not exist")
+		return
+	}
 
-    challenged := &user.User{}
-    ra = db.Find(challenged, input.ChallengedID).RowsAffected
-    if ra == 0 {
-        c.JSON(http.StatusNotFound, "Challenged user of provided specified id does not exist")
-        return
-    }
+	challenged := &user.User{}
+	ra = db.Find(challenged, input.ChallengedID).RowsAffected
+	if ra == 0 {
+		c.JSON(http.StatusNotFound, "Challenged user of provided specified id does not exist")
+		return
+	}
 
-    if challenger.MoneyAmount < *input.Amount {
-        c.JSON(http.StatusUnprocessableEntity, "Challenger has no enough money to start this challenge")
-        return
-    }
+	if challenger.MoneyAmount < *input.Amount {
+		c.JSON(http.StatusUnprocessableEntity, "Challenger has no enough money to start this challenge")
+		return
+	}
 
 	challenge := NewChallenge(&input, challenger, challenged)
 	db.Create(challenge)
@@ -172,12 +158,11 @@ func Create(c *gin.Context, db *gorm.DB) {
 }
 
 type UpdateChallengeInput struct {
-	Status   models.Status `json:"status"`
-	WinnerID uint          `json:"winner_id"`
+	Status   models.ChallengeStatus `json:"status" binding:"required,max=4,min=0"`
+	WinnerID *uint  `json:"winner_id"`
 }
 
 func Update(c *gin.Context, db *gorm.DB) {
-
 	var input UpdateChallengeInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -188,27 +173,26 @@ func Update(c *gin.Context, db *gorm.DB) {
 	id, _ := c.Params.Get("id")
 	rows_affected := db.Find(&challenge, id).RowsAffected
 	if rows_affected == 0 {
-		c.JSON(422, "Challenge not found")
+		c.JSON(http.StatusUnprocessableEntity, "Challenge not found")
 		return
 	}
 
 	if challenge.Status == models.Finished {
-		c.JSON(422, "Challenge is Finished, can't change anything!")
+		c.JSON(http.StatusUnprocessableEntity, "Challenge is Finished, can't change anything!")
 		return
 	}
 
-	if input.WinnerID == 0 && input.Status == models.Finished {
-		c.JSON(422, "You need to specify the winner!")
-        return
+	if input.WinnerID == nil && input.Status == models.Finished {
+		c.JSON(http.StatusUnprocessableEntity, "You need to specify the winner!")
+		return
 	}
 
-	if input.WinnerID != 0 && input.Status != models.Finished {
-		c.JSON(422, "You can't specify the winner if challenge is not finished")
-        return
+	if input.WinnerID != nil && input.Status != models.Finished {
+		c.JSON(http.StatusUnprocessableEntity, "You can't specify the winner if challenge is not finished")
+		return
 	}
 
-    
-    db.Model(&challenge).Updates(input)
+	db.Model(&challenge).Updates(input)
 	c.JSON(http.StatusOK, challenge)
 
 	// if input.Status == models.Finished {

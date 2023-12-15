@@ -5,10 +5,10 @@ import (
 	"github.com/ventcode/betsy-backend/user"
 )
 
-type Status int
+type ChallengeStatus int
 
 const (
-	New Status = iota
+	New ChallengeStatus = iota
 	Accepted
 	Started
 	Finished
@@ -23,7 +23,7 @@ type Challenge struct {
 	Challenged    user.User `json:"challenged"`
 	Title         string    `gorm:"not null" json:"title"`
 	Amount        uint      `gorm:"not null;default:0" json:"amount"`
-	Status        Status    `gorm:"not null;default:0" json:"status"`
+	Status        ChallengeStatus    `gorm:"not null;default:0" json:"status"`
 	ChallengerWon *bool     `json:"challenger_won"`
 	Bets          []Bet     `json:"bets"`
 }
