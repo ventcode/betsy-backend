@@ -16,10 +16,10 @@ func Show(c *gin.Context, db *gorm.DB) {
 	rows_affected := db.Find(&cha, id).RowsAffected
 
 	if rows_affected == 0 {
-		c.JSON(422, "Challenge not found")
+		c.JSON(http.StatusUnprocessableEntity, "Challenge not found")
 		return
 	} else {
-		c.JSON(200, gin.H{"challenge": cha})
+		c.JSON(http.StatusOK, gin.H{"challenge": cha})
 	}
 }
 
@@ -123,13 +123,15 @@ type CreateChallengeInput struct {
 	ChallengedID *int   `json:"challenged_id" binding:"required"`
 }
 
-func NewChallenge(challInp *CreateChallengeInput) *models.Challenge {
-	return &models.Challenge{
-		Title:        challInp.Title,
-		Amount:       *challInp.Amount,
-		ChallengerID: *challInp.ChallengerID,
-		ChallengedID: *challInp.ChallengedID,
-	}
+func NewChallenge(challInp *CreateChallengeInput, challenger, challenged *user.User) *Challenge {
+	return &Challenge{
+        Title: challInp.Title,
+        Amount: *challInp.Amount,
+        ChallengerID: *challInp.ChallengerID,
+        Challenger: *challenger,
+        ChallengedID: *challInp.ChallengedID,
+        Challenged: *challenged,
+    }
 }
 
 func Create(c *gin.Context, db *gorm.DB) {
@@ -139,9 +141,27 @@ func Create(c *gin.Context, db *gorm.DB) {
 		return
 	}
 
-	challenge := NewChallenge(&input)
+    challenger := &user.User{}
+    ra := db.Find(challenger, input.ChallengerID).RowsAffected
+    if ra == 0 {
+        c.JSON(http.StatusNotFound, "Challenger user of provided specified id does not exist")
+        return
+    }
+
+    challenged := &user.User{}
+    ra = db.Find(challenged, input.ChallengedID).RowsAffected
+    if ra == 0 {
+        c.JSON(http.StatusNotFound, "Challenged user of provided specified id does not exist")
+        return
+    }
+
+    if challenger.MoneyAmount < *input.Amount {
+        c.JSON(http.StatusUnprocessableEntity, "Challenger has no enough money to start this challenge")
+        return
+    }
+
+	challenge := NewChallenge(&input, challenger, challenged)
 	db.Create(challenge)
-	db.Preload("Challenger").Preload("Challenged").Find(challenge)
 
 	c.JSON(http.StatusOK, challenge)
 }
