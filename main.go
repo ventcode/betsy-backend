@@ -11,6 +11,9 @@ import (
 	"gorm.io/gorm"
 )
 
+// App Config
+var appConfig = SetAppConfig()
+
 func main() {
 	// Database
 	db := DatabaseConnection()
@@ -37,8 +40,6 @@ func main() {
 	router.POST("/challenges", useDB(challenge.Create))
 	router.PATCH("/challenges/:id", useDB(challenge.Update))
 	// router.POST("/challenges/:id/bets", bet.Create)
-
-	// generateMockData(db)
 	router.Run()
 }
 
