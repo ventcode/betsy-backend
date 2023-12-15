@@ -2,32 +2,19 @@ package user
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/ventcode/betsy-backend/common"
 	"gorm.io/gorm"
 )
 
 type User struct {
-	gorm.Model
-	ExternalId  string `gorm:"not null;unique"`
-	MoneyAmount uint   `gorm:"not null;default:0"`
+    common.Model
+	ExternalId  string `gorm:"not null;unique"json:"external_id"`
+	MoneyAmount uint   `gorm:"not null;default:0"json:"money_amount"`
 }
 
-func Index(c *gin.Context) {
-	db, exists := c.Get("db")
-	if !exists {
-		c.JSON(500, gin.H{"error": "Failed to get database instance"})
-		return
-	}
-
-	// Type assertion to convert interface{} to *gorm.DB
-	gormDB, ok := db.(*gorm.DB)
-	if !ok {
-		c.JSON(500, gin.H{"error": "Invalid database instance type"})
-		return
-	}
-
-	// Query the database
+func Index(c *gin.Context, db *gorm.DB) {
 	var users []User
-	result := gormDB.Find(&users)
+	result := db.Find(&users)
 	if result.Error != nil {
 		c.JSON(500, gin.H{"error": "Failed to fetch users"})
 		return

@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/ventcode/betsy-backend/common"
 	"github.com/ventcode/betsy-backend/user"
 	"gorm.io/gorm"
 )
@@ -22,42 +24,46 @@ const (
 )
 
 type Challenge struct {
-	gorm.Model
-	ChallengerID  int `gorm:"not null"`
-	Challenger    user.User
-	ChallengedId  int `gorm:"not null"`
-	Challenged    user.User
-	Title         string `gorm:"not null"`
-	Amount        uint   `gorm:"not null;default:0"`
-	Status        Status `gorm:"not null;default:0"`
-	ChallengerWon *bool
+	common.Model
+	ChallengerID  int       `gorm:"not null"json:"-"`
+	Challenger    user.User `json:"challenger"`
+	ChallengedID  int       `gorm:"not null"json:"-"`
+	Challenged    user.User `json:"challenged"`
+	Title         string    `gorm:"not null"json:"title"`
+	Amount        uint      `gorm:"not null;default:0"json:"amount"`
+	Status        Status    `gorm:"not null;default:0"json:"status"`
+	ChallengerWon *bool     `json:"challenger_won"`
 }
 
-func Show(c *gin.Context) {
+func Show(c *gin.Context, db *gorm.DB) {
 	userid := c.Param("userid")
 	message := "userid is " + userid
 	c.String(http.StatusOK, message)
 	fmt.Println(message)
 }
 
-func Index(c *gin.Context) {
+func Update(c *gin.Context, db *gorm.DB) {
+	cId, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(422, "Cannot parse given ID")
+		return
+	}
+
+	chall := Challenge{}
+	ra := db.Preload("Challenger").Preload("Challenged").Find(&chall, cId).RowsAffected
+	if ra == 0 {
+		c.JSON(422, "Challenge not found")
+		return
+	}
+
+	c.JSON(200, chall)
+}
+
+func Index(c *gin.Context, db *gorm.DB) {
 	fmt.Println("Super")
 }
 
-func Create(c *gin.Context) {
-	// Access GORM DB instance from Gin's context
-	db, exists := c.Get("db")
-	if !exists {
-		c.JSON(500, gin.H{"error": "Failed to get database instance"})
-		return
-	}
-
-	// Type assertion to convert interface{} to *gorm.DB
-	gormDB, ok := db.(*gorm.DB)
-	if !ok {
-		c.JSON(500, gin.H{"error": "Invalid database instance type"})
-		return
-	}
+func Create(c *gin.Context, db *gorm.DB) {
 
 	jsonData, err := io.ReadAll(c.Request.Body)
 	if err != nil {
@@ -75,19 +81,19 @@ func Create(c *gin.Context) {
 	}
 
 	var user user.User
-	getFirstUserResult := gormDB.First(&user)
+	getFirstUserResult := db.First(&user)
 	if getFirstUserResult.Error != nil {
 		c.JSON(500, gin.H{"error": "Failed to fetch the first user"})
 		return
 	}
 
-	newChallenge.ChallengedId = int(user.ID)
+	newChallenge.ChallengedID = int(user.ID)
 	newChallenge.ChallengerID = int(user.ID)
 	// TODO: Use the status enum somehow
 	newChallenge.Status = 0
 
 	// Create the user in the database
-	createChallengeResult := gormDB.Create(&newChallenge)
+	createChallengeResult := db.Create(&newChallenge)
 	if createChallengeResult.Error != nil {
 		c.JSON(500, gin.H{"error": "Failed to create challenge"})
 		return
