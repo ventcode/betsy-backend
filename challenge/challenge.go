@@ -1,7 +1,6 @@
 package challenge
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -142,6 +141,11 @@ func Create(c *gin.Context, db *gorm.DB) {
 		return
 	}
 
+    if *input.ChallengedID == *input.ChallengerID {
+        c.JSON(http.StatusUnprocessableEntity, "You can't challenge yourself!")
+        return
+    }
+
     challenger := &user.User{}
     ra := db.Find(challenger, input.ChallengerID).RowsAffected
     if ra == 0 {
@@ -188,9 +192,6 @@ func Update(c *gin.Context, db *gorm.DB) {
 		return
 	}
 
-	fmt.Printf("%+v\n", challenge)
-	fmt.Printf("%+v\n", input)
-
 	if challenge.Status == models.Finished {
 		c.JSON(422, "Challenge is Finished, can't change anything!")
 		return
@@ -198,27 +199,29 @@ func Update(c *gin.Context, db *gorm.DB) {
 
 	if input.WinnerID == 0 && input.Status == models.Finished {
 		c.JSON(422, "You need to specify the winner!")
+        return
 	}
 
 	if input.WinnerID != 0 && input.Status != models.Finished {
 		c.JSON(422, "You can't specify the winner if challenge is not finished")
+        return
 	}
 
-	if input.Status == models.Finished {
-		challengerWon := challenge.ChallengerID == int(input.WinnerID)
-		if challengerWon {
-			fmt.Printf("elo")
-			// db.Update()
-		}
-		fmt.Println(challengerWon)
+    
+    db.Model(&challenge).Updates(input)
+	c.JSON(http.StatusOK, challenge)
 
-		//
-		c.JSON(http.StatusOK, input)
-		return
-	}
+	// if input.Status == models.Finished {
+	// 	challengerWon := challenge.ChallengerID == int(input.WinnerID)
+	// 	if challengerWon {
+	// 		db.Model(&challenge).Updates(input)
+	// 	}
+	// 	fmt.Println(challengerWon)
 
-	// challenge := models.Challenge{Title: input.Title, Amount: *input.Amount, ChallengerID: *input.ChallengerID, ChallengedID: *input.ChallengedID}
-	// db.Create(&challenge)
+	// 	//
+	// 	c.JSON(http.StatusOK, challenge)
+	// 	return
+	// }
 
-	c.JSON(http.StatusOK, input)
+	// c.JSON(http.StatusOK, challenge)
 }
