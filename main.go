@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/gin-gonic/gin"
+	"github.com/ventcode/betsy-backend/bet"
 	"github.com/ventcode/betsy-backend/challenge"
 	"github.com/ventcode/betsy-backend/helpers"
 	"github.com/ventcode/betsy-backend/models"
@@ -37,9 +38,10 @@ func main() {
 	router.GET("/users", useDB(user.Index))
 	router.GET("/challenges", useDB(challenge.Index))
 	router.GET("/challenges/:id", useDB(challenge.Show))
+	router.GET("/user", useDB(user.Show))
 	router.POST("/challenges", useDB(challenge.Create))
 	router.PATCH("/challenges/:id", useDB(challenge.Update))
-	// router.POST("/challenges/:id/bets", bet.Create)
+	router.POST("/bets", useDB(bet.Create))
 	router.Run()
 }
 
