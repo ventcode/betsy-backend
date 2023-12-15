@@ -1,9 +1,7 @@
 package challenge
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"strconv"
 
@@ -63,43 +61,26 @@ func Index(c *gin.Context, db *gorm.DB) {
 	fmt.Println("Super")
 }
 
+type CreateChallengeInput struct {
+	Title        string `json:"title"binding:"required"`
+	Amount       uint   `json:"amount"binding:"required"`
+	ChallengerID int    `json:"challenger_id"binding:"required"`
+	ChallengedID int    `json:"challenged_id"binding:"required"`
+}
+
 func Create(c *gin.Context, db *gorm.DB) {
-
-	jsonData, err := io.ReadAll(c.Request.Body)
-	if err != nil {
-		c.JSON(500, gin.H{"error": "Failed to read request body"})
+	var input CreateChallengeInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Create an instance of YourStruct
-	var newChallenge Challenge
+	fmt.Printf("%+v\n", input)
 
-	// Unmarshal the JSON data into the struct
-	if err := json.Unmarshal(jsonData, &newChallenge); err != nil {
-		c.JSON(400, gin.H{"error": "Failed to unmarshal JSON"})
-		return
-	}
+	challenge := Challenge{Title: input.Title, Amount: input.Amount, ChallengerID: input.ChallengerID, ChallengedID: input.ChallengedID}
+	db.Create(&challenge)
 
-	var user user.User
-	getFirstUserResult := db.First(&user)
-	if getFirstUserResult.Error != nil {
-		c.JSON(500, gin.H{"error": "Failed to fetch the first user"})
-		return
-	}
+	fmt.Println(challenge)
 
-	newChallenge.ChallengedID = int(user.ID)
-	newChallenge.ChallengerID = int(user.ID)
-	// TODO: Use the status enum somehow
-	newChallenge.Status = 0
-
-	// Create the user in the database
-	createChallengeResult := db.Create(&newChallenge)
-	if createChallengeResult.Error != nil {
-		c.JSON(500, gin.H{"error": "Failed to create challenge"})
-		return
-	}
-
-	// Return the created user
-	c.JSON(201, newChallenge)
-
+	c.JSON(http.StatusOK, challenge)
 }
