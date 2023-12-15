@@ -1,0 +1,17 @@
+version: "3.8"
+services:
+  app:
+    networks:
+      - default
+      - intranet
+
+  database:
+    ports: !reset []
+    networks:
+      - default
+
+networks:
+  default:
+  intranet:
+    name: intranet_default
+    external: true
