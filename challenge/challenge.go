@@ -77,6 +77,15 @@ type CreateChallengeInput struct {
 	ChallengedID *int   `json:"challenged_id" binding:"required"`
 }
 
+func NewChallenge(challInp *CreateChallengeInput) *Challenge {
+	return &Challenge{
+        Title: challInp.Title,
+        Amount: *challInp.Amount,
+        ChallengerID: *challInp.ChallengerID,
+        ChallengedID: *challInp.ChallengedID,
+    }
+}
+
 func Create(c *gin.Context, db *gorm.DB) {
 	var input CreateChallengeInput
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -84,8 +93,9 @@ func Create(c *gin.Context, db *gorm.DB) {
 		return
 	}
 
-	challenge := Challenge{Title: input.Title, Amount: *input.Amount, ChallengerID: *input.ChallengerID, ChallengedID: *input.ChallengedID}
-	db.Create(&challenge)
+	challenge := NewChallenge(&input)
+	db.Create(challenge)
+    db.Preload("Challenger").Preload("Challenged").Find(challenge)
 
 	c.JSON(http.StatusOK, challenge)
 }
