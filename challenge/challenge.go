@@ -2,17 +2,11 @@ package challenge
 
 import (
 	"fmt"
-<<<<<<< HEAD
-
-	"github.com/gin-gonic/gin"
-	"github.com/ventcode/betsy-backend/helpers"
-=======
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/ventcode/betsy-backend/common"
->>>>>>> 63f70de (snake case and things)
 	"github.com/ventcode/betsy-backend/user"
 	"gorm.io/gorm"
 )
