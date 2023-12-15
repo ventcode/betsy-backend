@@ -4,8 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/ventcode/betsy-backend/bet"
-	"github.com/ventcode/betsy-backend/challenge"
+	"github.com/ventcode/betsy-backend/models"
 	"github.com/ventcode/betsy-backend/user"
 	"gorm.io/gorm"
 )
@@ -40,7 +39,7 @@ func SeedChallenges(db *gorm.DB) {
 			challenged = users[i+1]
 		}
 
-		challenge := challenge.Challenge{Challenger: challenger, Challenged: challenged, Title: "Great challenge"}
+		challenge := models.Challenge{Challenger: challenger, Challenged: challenged, Title: "Great challenge"}
 		result := db.Create(&challenge)
 		if result.Error != nil {
 			fmt.Printf("Error inserting challenge with Title %s: %v\n", challenge.Title, result.Error)
@@ -53,12 +52,12 @@ func SeedBets(db *gorm.DB) {
 	var users []user.User
 	db.Order("RANDOM()").Limit(5).Find(&users)
 
-	var challenges []challenge.Challenge
+	var challenges []models.Challenge
 	db.Order("RANDOM()").Limit(5).Find(&challenges)
 
 	for _, user := range users {
 		challenge := challenges[rand.Intn(len(challenges)-1)]
-		bet := bet.Bet{User: user, Challenge: challenge, BetOnChallenger: false, Amount: uint(rand.Uint32())}
+		bet := models.Bet{User: user, Challenge: challenge, BetOnChallenger: false, Amount: uint(rand.Uint32())}
 		result := db.Create(&bet)
 		if result.Error != nil {
 			fmt.Println(result.Error)
