@@ -58,7 +58,10 @@ func Update(c *gin.Context, db *gorm.DB) {
 }
 
 func Index(c *gin.Context, db *gorm.DB) {
-	fmt.Println("Super")
+	var challenges []Challenge
+	db.Preload("Challenger").Preload("Challenged").Find(&challenges)
+
+	c.JSON(http.StatusOK, gin.H{"data": challenges})
 }
 
 type CreateChallengeInput struct {

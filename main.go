@@ -19,9 +19,18 @@ func main() {
 		log.Fatal(err)
 	}
 
+	// Seeds
+	SeedUsers(db)
+	SeedChallenges(db)
+	SeedBets(db)
+
+	// Router
 	router := gin.Default()
+
+	// Middleware
 	router.Use(MiddlewareSetDB(db))
 
+	// Routes
 	router.GET("/users", useDB(user.Index))
 	router.GET("/challenges", useDB(challenge.Index))
 	router.GET("/challenges/:id", useDB(challenge.Show))
@@ -39,22 +48,4 @@ func useDB(controllerFunc func(*gin.Context, *gorm.DB)) func(*gin.Context) {
 
 		controllerFunc(c, gormDB)
 	}
-}
-
-func generateMockData(db *gorm.DB) {
-	handleError := func(tx *gorm.DB) {
-		err := tx.Error
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
-
-	u := &user.User{ExternalId: "greatGoogleId", MoneyAmount: 1000}
-	handleError(db.Create(u))
-
-	uu := &user.User{ExternalId: "google", MoneyAmount: 2000}
-	handleError(db.Create(uu))
-
-	ch := &challenge.Challenge{Challenger: *u, Challenged: *uu, Title: "Great challenge"}
-	handleError(db.Create(ch))
 }

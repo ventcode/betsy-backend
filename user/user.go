@@ -7,9 +7,9 @@ import (
 )
 
 type User struct {
-    common.Model
-	ExternalId  string `gorm:"not null;unique"json:"external_id"`
-	MoneyAmount uint   `gorm:"not null;default:0"json:"money_amount"`
+	common.Model
+	ExternalId  string `gorm:"not null;unique" json:"external_id"`
+	MoneyAmount uint   `gorm:"not null;default:0" json:"money_amount"`
 }
 
 func Index(c *gin.Context, db *gorm.DB) {
