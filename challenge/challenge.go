@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/ventcode/betsy-backend/models"
+	"github.com/ventcode/betsy-backend/user"
 	"gorm.io/gorm"
 )
 
@@ -123,8 +124,8 @@ type CreateChallengeInput struct {
 	ChallengedID *int   `json:"challenged_id" binding:"required"`
 }
 
-func NewChallenge(challInp *CreateChallengeInput, challenger, challenged *user.User) *Challenge {
-	return &Challenge{
+func NewChallenge(challInp *CreateChallengeInput, challenger, challenged *user.User) *models.Challenge {
+	return &models.Challenge{
         Title: challInp.Title,
         Amount: *challInp.Amount,
         ChallengerID: *challInp.ChallengerID,
