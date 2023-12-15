@@ -77,12 +77,14 @@ type CreateChallengeInput struct {
 	ChallengedID *int   `json:"challenged_id" binding:"required"`
 }
 
-func NewChallenge(challInp *CreateChallengeInput) *Challenge {
+func NewChallenge(challInp *CreateChallengeInput, challenger, challenged *user.User) *Challenge {
 	return &Challenge{
         Title: challInp.Title,
         Amount: *challInp.Amount,
         ChallengerID: *challInp.ChallengerID,
+        Challenger: *challenger,
         ChallengedID: *challInp.ChallengedID,
+        Challenged: *challenged,
     }
 }
 
@@ -112,9 +114,8 @@ func Create(c *gin.Context, db *gorm.DB) {
         return
     }
 
-	challenge := NewChallenge(&input)
+	challenge := NewChallenge(&input, challenger, challenged)
 	db.Create(challenge)
-    db.Preload("Challenger").Preload("Challenged").Find(challenge)
 
 	c.JSON(http.StatusOK, challenge)
 }
