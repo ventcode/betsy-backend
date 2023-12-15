@@ -2,7 +2,6 @@ package challenge
 
 import (
 	"fmt"
-	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -34,10 +33,17 @@ type Challenge struct {
 }
 
 func Show(c *gin.Context, db *gorm.DB) {
-	userid := c.Param("userid")
-	message := "userid is " + userid
-	c.String(http.StatusOK, message)
-	fmt.Println(message)
+	var cha Challenge
+
+	id, _ := c.Params.Get("id")
+	rows_affected := db.Find(&cha, id).RowsAffected
+
+	if rows_affected == 0 {
+		c.JSON(422, "Challenge not found")
+		return
+	} else {
+		c.JSON(200, gin.H{"challenge": cha})
+	}
 }
 
 func Update(c *gin.Context, db *gorm.DB) {
