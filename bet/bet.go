@@ -2,7 +2,6 @@ package bet
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/ventcode/betsy-backend/challenge"
@@ -29,6 +28,36 @@ type BetCreate struct {
 	Amount          uint `json:"amount" binding:"required,gt=0"`
 }
 
+type Status int
+
+const (
+	New Status = iota
+	Accepted
+	Started
+	Finished
+	Rejected
+)
+
+type Challenge struct {
+	ID uint `gorm:"primarykey" json:"id"`
+	common.Model
+	ChallengerID  int       `gorm:"not null"json:"-"`
+	Challenger    user.User `json:"challenger"`
+	ChallengedID  int       `gorm:"not null"json:"-"`
+	Challenged    user.User `json:"challenged"`
+	Title         string    `gorm:"not null"json:"title"`
+	Amount        uint      `gorm:"not null;default:0"json:"amount"`
+	Status        Status    `gorm:"not null;default:0"json:"status"`
+	ChallengerWon *bool     `json:"challenger_won"`
+}
+
+type CreateRequest struct {
+	ChallengeID       int   `json: challenge_id"`
+	UserID            int   `json:"user_id"`
+	BetOnChallengerID *bool `json:"bet_on_challenger_id"`
+	Amount            int   `json:"amount"`
+}
+
 func Create(c *gin.Context, db *gorm.DB) {
 	var bet BetCreate
 
@@ -37,22 +66,25 @@ func Create(c *gin.Context, db *gorm.DB) {
 		return
 	}
 
-	var existing_bets []Bet
+	var existing_bets []BetCreate
 
-	challenge_id, _ := c.Params.Get("challenge_id")
-	user_id, _ := c.Params.Get("user_id")
-
-	int_challenge_id, _ := strconv.Atoi(challenge_id)
-	int_user_id, _ := strconv.Atoi(user_id)
-
-	db.Where(&Bet{ChallengeID: int_challenge_id, UserID: int_user_id}).Find(&existing_bets)
+	db.Table("bets").Where(&Bet{ChallengeID: bet.ChallengeID, UserID: bet.UserID}).Find(&existing_bets)
 
 	if len(existing_bets) > 0 {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Bet for this challenge already exists"})
 		return
 	}
 
+	var chal challenge.Challenge
+
+	rows_affected := db.Table("challenges").Where(Challenge{Status: 1, ID: uint(bet.ChallengeID)}).Find(&chal).RowsAffected
+
 	err := db.Table("bets").Create(&bet).Error
+
+	if rows_affected == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Cannot find challenge that allows for betting"})
+		return
+	}
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
