@@ -14,7 +14,6 @@ func main() {
 	// Database
 	db := DatabaseConnection()
 	err := db.AutoMigrate(&user.User{}, &challenge.Challenge{}, &bet.Bet{})
-
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -22,15 +21,34 @@ func main() {
 	router := gin.Default()
 	router.Use(MiddlewareSetDB(db))
 
-	router.GET("/users", user.Index)
-	router.GET("/challenges", challenge.Index)
-	router.GET("/challenges/:id", challenge.Show)
+	router.GET("/users", useDB(user.Index))
+	router.GET("/challenges", useDB(challenge.Index))
+	router.GET("/challenges/:id", useDB(challenge.Show))
 	// router.POST("/challenges", challenge.Create)
-	// router.PATCH("/challenges/:id", challenge.Update)
+	router.PATCH("/challenges/:id", useDB(challenge.Update))
 	// router.POST("/challenges/:id/bets", bet.Create)
 
 	// generateMockData(db)
 	router.Run()
+}
+
+func useDB(controllerFunc func(*gin.Context, *gorm.DB)) func(*gin.Context) {
+    return func(c *gin.Context) {
+        db, exists := c.Get("db")
+        if !exists {
+            c.JSON(500, gin.H{"error": "Failed to get database instance"})
+            return
+        }
+
+        // Type assertion to convert interface{} to *gorm.DB
+        gormDB, ok := db.(*gorm.DB)
+        if !ok {
+            c.JSON(500, gin.H{"error": "Invalid database instance type"})
+            return
+        }
+
+        controllerFunc(c, gormDB)
+    } 
 }
 
 func generateMockData(db *gorm.DB) {
@@ -44,7 +62,7 @@ func generateMockData(db *gorm.DB) {
 	u := &user.User{ExternalId: "greatGoogleId", MoneyAmount: 1000}
 	handleError(db.Create(u))
 
-	uu := &user.User{ExternalId: "greatGoogleId", MoneyAmount: 2000}
+	uu := &user.User{ExternalId: "google", MoneyAmount: 2000}
 	handleError(db.Create(uu))
 
 	ch := &challenge.Challenge{Challenger: *u, Challenged: *uu, Title: "Great challenge"}
