@@ -7,6 +7,7 @@ import (
 	"github.com/ventcode/betsy-backend/bet"
 	"github.com/ventcode/betsy-backend/challenge"
 	"github.com/ventcode/betsy-backend/user"
+	"github.com/ventcode/betsy-backend/helpers"
 	"gorm.io/gorm"
 )
 
@@ -34,18 +35,7 @@ func main() {
 
 func useDB(controllerFunc func(*gin.Context, *gorm.DB)) func(*gin.Context) {
     return func(c *gin.Context) {
-        db, exists := c.Get("db")
-        if !exists {
-            c.JSON(500, gin.H{"error": "Failed to get database instance"})
-            return
-        }
-
-        // Type assertion to convert interface{} to *gorm.DB
-        gormDB, ok := db.(*gorm.DB)
-        if !ok {
-            c.JSON(500, gin.H{"error": "Invalid database instance type"})
-            return
-        }
+        gormDB := helpers.GetDB(c)
 
         controllerFunc(c, gormDB)
     } 
