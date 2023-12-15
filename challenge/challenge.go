@@ -1,7 +1,9 @@
 package challenge
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -40,4 +42,58 @@ func Show(c *gin.Context) {
 
 func Index(c *gin.Context) {
 	fmt.Println("Super")
+}
+
+func Create(c *gin.Context) {
+	// Access GORM DB instance from Gin's context
+	db, exists := c.Get("db")
+	if !exists {
+		c.JSON(500, gin.H{"error": "Failed to get database instance"})
+		return
+	}
+
+	// Type assertion to convert interface{} to *gorm.DB
+	gormDB, ok := db.(*gorm.DB)
+	if !ok {
+		c.JSON(500, gin.H{"error": "Invalid database instance type"})
+		return
+	}
+
+	jsonData, err := io.ReadAll(c.Request.Body)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Failed to read request body"})
+		return
+	}
+
+	// Create an instance of YourStruct
+	var newChallenge Challenge
+
+	// Unmarshal the JSON data into the struct
+	if err := json.Unmarshal(jsonData, &newChallenge); err != nil {
+		c.JSON(400, gin.H{"error": "Failed to unmarshal JSON"})
+		return
+	}
+
+	var user user.User
+	getFirstUserResult := gormDB.First(&user)
+	if getFirstUserResult.Error != nil {
+		c.JSON(500, gin.H{"error": "Failed to fetch the first user"})
+		return
+	}
+
+	newChallenge.ChallengedId = int(user.ID)
+	newChallenge.ChallengerID = int(user.ID)
+	// TODO: Use the status enum somehow
+	newChallenge.Status = 0
+
+	// Create the user in the database
+	createChallengeResult := gormDB.Create(&newChallenge)
+	if createChallengeResult.Error != nil {
+		c.JSON(500, gin.H{"error": "Failed to create challenge"})
+		return
+	}
+
+	// Return the created user
+	c.JSON(201, newChallenge)
+
 }

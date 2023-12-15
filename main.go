@@ -32,7 +32,7 @@ func main() {
 	router.GET("/users", user.Index)
 	router.GET("/challenges", challenge.Index)
 	router.GET("/challenges/:id", challenge.Show)
-	// router.POST("/challenges", challenge.Create)
+	router.POST("/challenges", challenge.Create)
 	// router.PATCH("/challenges/:id", challenge.Update)
 	// router.POST("/challenges/:id/bets", bet.Create)
 
