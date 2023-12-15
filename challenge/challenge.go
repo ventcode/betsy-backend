@@ -147,7 +147,6 @@ func Create(c *gin.Context, db *gorm.DB) {
 }
 
 type UpdateChallengeInput struct {
-	// ChallengeId models.Challenge `json:"challenge_id"`
 	Status   models.Status `json:"status"`
 	WinnerID uint          `json:"winner_id"`
 }
