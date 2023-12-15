@@ -62,10 +62,10 @@ func Index(c *gin.Context, db *gorm.DB) {
 }
 
 type CreateChallengeInput struct {
-	Title        string `json:"title"binding:"required"`
-	Amount       uint   `json:"amount"binding:"required"`
-	ChallengerID int    `json:"challenger_id"binding:"required"`
-	ChallengedID int    `json:"challenged_id"binding:"required"`
+	Title        string `json:"title" binding:"required"`
+	Amount       *uint  `json:"amount" binding:"required,gt=0"`
+	ChallengerID *int   `json:"challenger_id" binding:"required"`
+	ChallengedID *int   `json:"challenged_id" binding:"required"`
 }
 
 func Create(c *gin.Context, db *gorm.DB) {
@@ -75,12 +75,8 @@ func Create(c *gin.Context, db *gorm.DB) {
 		return
 	}
 
-	fmt.Printf("%+v\n", input)
-
-	challenge := Challenge{Title: input.Title, Amount: input.Amount, ChallengerID: input.ChallengerID, ChallengedID: input.ChallengedID}
+	challenge := Challenge{Title: input.Title, Amount: *input.Amount, ChallengerID: *input.ChallengerID, ChallengedID: *input.ChallengedID}
 	db.Create(&challenge)
-
-	fmt.Println(challenge)
 
 	c.JSON(http.StatusOK, challenge)
 }
