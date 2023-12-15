@@ -4,20 +4,20 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/ventcode/betsy-backend/challenge"
 	"github.com/ventcode/betsy-backend/common"
+	"github.com/ventcode/betsy-backend/models"
 	"github.com/ventcode/betsy-backend/user"
 	"gorm.io/gorm"
 )
 
 type Bet struct {
 	common.Model
-	UserID          int                 `gorm:"not null"json:"-"`
-	User            user.User           `json:"user"`
-	ChallengeID     int                 `gorm:"not null"json:"challenge_id"`
-	Challenge       challenge.Challenge `json:"-"`
-	BetOnChallenger bool                `gorm:"not null"json:"bet_on_challenger"`
-	Amount          uint                `gorm:"not null;check:amount > 0"json:"amount"`
+	UserID          int              `gorm:"not null"json:"-"`
+	User            user.User        `json:"user"`
+	ChallengeID     int              `gorm:"not null"json:"challenge_id"`
+	Challenge       models.Challenge `json:"-"`
+	BetOnChallenger bool             `gorm:"not null"json:"bet_on_challenger"`
+	Amount          uint             `gorm:"not null;check:amount > 0"json:"amount"`
 }
 
 type BetCreate struct {
@@ -75,7 +75,7 @@ func Create(c *gin.Context, db *gorm.DB) {
 		return
 	}
 
-	var chal challenge.Challenge
+	var chal models.Challenge
 
 	rows_affected := db.Table("challenges").Where(Challenge{Status: 1, ID: uint(bet.ChallengeID)}).Find(&chal).RowsAffected
 
