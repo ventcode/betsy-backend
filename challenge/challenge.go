@@ -145,13 +145,29 @@ type UpdateChallengeInput struct {
 func Update(c *gin.Context, db *gorm.DB) {
 
 	//TODO: Update database on every status apart from Finished
-	var input CreateChallengeInput
+	var input UpdateChallengeInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	fmt.Println(input)
+	var challenge models.Challenge
+	id, _ := c.Params.Get("id")
+	rows_affected := db.Find(&challenge, id).RowsAffected
+	if rows_affected == 0 {
+		c.JSON(422, "Challenge not found")
+		return
+	}
+
+	if input.Status == models.Finished {
+
+		challengerWon := challenge.ChallengerID == int(input.WinnerID)
+		fmt.Println(challengerWon)
+
+		//
+		c.JSON(http.StatusOK, input)
+		return
+	}
 
 	// challenge := models.Challenge{Title: input.Title, Amount: *input.Amount, ChallengerID: *input.ChallengerID, ChallengedID: *input.ChallengedID}
 	// db.Create(&challenge)
