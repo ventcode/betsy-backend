@@ -184,7 +184,6 @@ func Update(c *gin.Context, db *gorm.DB) {
 	}
 
 	if input.Status == models.Finished {
-
 		challengerWon := challenge.ChallengerID == int(input.WinnerID)
 		if challengerWon {
 			fmt.Printf("elo")
