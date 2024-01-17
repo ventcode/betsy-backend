@@ -5,24 +5,18 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/ventcode/betsy-backend/common"
+	"github.com/ventcode/betsy-backend/models"
 	"gorm.io/gorm"
 )
 
 const googleUrl = "https://www.googleapis.com/oauth2/v3/userinfo"
-
-type User struct {
-	common.Model
-	ExternalId  string `gorm:"not null;unique" json:"external_id"`
-	MoneyAmount uint   `gorm:"not null;default:0" json:"money_amount"`
-}
 
 type UserResponse struct {
 	Sub string
 }
 
 func Index(c *gin.Context, db *gorm.DB) {
-	var users []User
+	var users []models.User
 	result := db.Find(&users)
 	if result.Error != nil {
 		c.JSON(500, gin.H{"error": "Failed to fetch users"})
@@ -57,7 +51,7 @@ func Show(c *gin.Context, db *gorm.DB) {
 		}
 	}
 
-	user := User{}
+	user := models.User{}
 	result := db.Find(&user, "external_id = ?", parsedResponse.Sub)
 
 	if result.RowsAffected == 0 {
@@ -72,4 +66,13 @@ func Show(c *gin.Context, db *gorm.DB) {
 	} else {
 		c.JSON(http.StatusOK, user)
 	}
+}
+
+func GetBets(c *gin.Context, db *gorm.DB) {
+	var bets []models.Bet
+	id, _ := c.Params.Get("id")
+
+	db.Preload("Challenge").Preload("User").Where("user_id = ?", id).Find(&bets)
+
+	c.JSON(http.StatusOK, gin.H{"data": bets})
 }

@@ -5,12 +5,11 @@ import (
 	"math/rand"
 
 	"github.com/ventcode/betsy-backend/models"
-	"github.com/ventcode/betsy-backend/user"
 	"gorm.io/gorm"
 )
 
 func SeedUsers(db *gorm.DB) {
-	users := []user.User{
+	users := []models.User{
 		{ExternalId: "greatGoogleId1", MoneyAmount: 1000},
 		{ExternalId: "greatGoogleId2", MoneyAmount: 1000},
 		{ExternalId: "greatGoogleId3", MoneyAmount: 1000},
@@ -28,11 +27,11 @@ func SeedUsers(db *gorm.DB) {
 }
 
 func SeedChallenges(db *gorm.DB) {
-	var users []user.User
+	var users []models.User
 	db.Order("RANDOM()").Limit(5).Find(&users)
 
 	for i, challenger := range users {
-		var challenged user.User
+		var challenged models.User
 		if i == len(users)-1 {
 			challenged = users[0]
 		} else {
@@ -49,7 +48,7 @@ func SeedChallenges(db *gorm.DB) {
 }
 
 func SeedBets(db *gorm.DB) {
-	var users []user.User
+	var users []models.User
 	db.Order("RANDOM()").Limit(5).Find(&users)
 
 	var challenges []models.Challenge

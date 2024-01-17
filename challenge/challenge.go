@@ -5,7 +5,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/ventcode/betsy-backend/models"
-	"github.com/ventcode/betsy-backend/user"
 	"gorm.io/gorm"
 )
 
@@ -13,7 +12,7 @@ func Show(c *gin.Context, db *gorm.DB) {
 	var cha models.Challenge
 
 	id, _ := c.Params.Get("id")
-	rows_affected := db.Find(&cha, id).RowsAffected
+	rows_affected := db.Preload("Challenger").Preload("Challenged").Preload("Bets").Preload("Bets.User").Find(&cha, id).RowsAffected
 
 	if rows_affected == 0 {
 		c.JSON(http.StatusUnprocessableEntity, "Challenge not found")
@@ -109,7 +108,7 @@ type CreateChallengeInput struct {
 	ChallengedID *int   `json:"challenged_id" binding:"required"`
 }
 
-func NewChallenge(challInp *CreateChallengeInput, challenger, challenged *user.User) *models.Challenge {
+func NewChallenge(challInp *CreateChallengeInput, challenger, challenged *models.User) *models.Challenge {
 	return &models.Challenge{
 		Title:        challInp.Title,
 		Amount:       *challInp.Amount,
@@ -132,14 +131,14 @@ func Create(c *gin.Context, db *gorm.DB) {
 		return
 	}
 
-	challenger := &user.User{}
+	challenger := &models.User{}
 	ra := db.Find(challenger, input.ChallengerID).RowsAffected
 	if ra == 0 {
 		c.JSON(http.StatusNotFound, "Challenger user of provided specified id does not exist")
 		return
 	}
 
-	challenged := &user.User{}
+	challenged := &models.User{}
 	ra = db.Find(challenged, input.ChallengedID).RowsAffected
 	if ra == 0 {
 		c.JSON(http.StatusNotFound, "Challenged user of provided specified id does not exist")
@@ -159,7 +158,7 @@ func Create(c *gin.Context, db *gorm.DB) {
 
 type UpdateChallengeInput struct {
 	Status   models.ChallengeStatus `json:"status" binding:"required,max=4,min=0"`
-	WinnerID *uint  `json:"winner_id"`
+	WinnerID *uint                  `json:"winner_id"`
 }
 
 func Update(c *gin.Context, db *gorm.DB) {

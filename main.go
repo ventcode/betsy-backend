@@ -18,7 +18,7 @@ var appConfig = SetAppConfig()
 func main() {
 	// Database
 	db := DatabaseConnection()
-	err := db.AutoMigrate(&user.User{}, &models.Challenge{}, &models.Bet{})
+	err := db.AutoMigrate(&models.User{}, &models.Challenge{}, &models.Bet{})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -35,12 +35,14 @@ func main() {
 	router.Use(MiddlewareSetDB(db))
 
 	// Routes
+	router.GET("/user", useDB(user.Show))
 	router.GET("/users", useDB(user.Index))
+	router.GET("/users/:id/bets", useDB(user.GetBets))
 	router.GET("/challenges", useDB(challenge.Index))
 	router.GET("/challenges/:id", useDB(challenge.Show))
-	router.GET("/user", useDB(user.Show))
 	router.POST("/challenges", useDB(challenge.Create))
 	router.PATCH("/challenges/:id", useDB(challenge.Update))
+	router.GET("/bets/:id", useDB(bet.Show))
 	router.POST("/bets", useDB(bet.Create))
 	router.Run()
 }
