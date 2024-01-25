@@ -1,0 +1,32 @@
+name: Deploy prod on release
+on:
+  release:
+    types: 
+      - released
+
+jobs:
+  deploy-prod:
+    name: Production deployment
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Generate version label
+        run: echo "timestamp=$(date +'%y.%m.%d-%H.%M.%S')" >> "$GITHUB_OUTPUT"
+        id: generate_version
+
+      - name: Build deployment package
+        run: zip -r deploy.zip . -x '*.git*'
+
+      - name: Deploy to Elastic Beanstalk
+        uses: einaregilsson/beanstalk-deploy@v21
+        with:
+          aws_access_key: ${{ secrets.AWS_ACCESS_KEY }}
+          aws_secret_key: ${{ secrets.AWS_SECRET_KEY }}
+          application_name: ${{ secrets.AWS_APPLICATION_NAME }}
+          use_existing_version_if_available: true
+          environment_name: ${{ secrets.AWS_ENVIRONMENT_NAME }}
+          version_label: ${{ github.ref_name }}-${{ steps.generate_version.outputs.timestamp }}
+          region: ${{ secrets.AWS_REGION }}
+          deployment_package: deploy.zip
